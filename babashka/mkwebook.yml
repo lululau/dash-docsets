@@ -1,0 +1,60 @@
+browser:  # browser settings, this setting is optional
+  headless: true  # headless mode, the -H CLI option could be used to override this setting
+  window_size: [1920, 1200] # browser window size
+  timeout: 30 # timeout for waiting for page loading
+  # Any options accepted by Ferum::Browser.new are allowed here
+
+concurrency: 16  # number of concurrent threads, default is no conccurency
+
+index-page:  # index page settings, this setting is mandatory
+  url: https://book.babashka.org/
+  title: Babashka book
+  selector: "html"  # CSS selector for the content to be saved, this setting is mandatory
+  output: "index.html" # output file name, this setting is mandatory
+  link-selector: "#toc a[href='#introduction']"  # CSS selector for links of content pages, this setting is mandatory
+  assets:  # assets to be downloaded, this setting is optional
+    - selector: "link[rel=stylesheet]" # CSS selector for assets
+      attr: href  # attribute name for the asset URL
+    - selector: "script[src]"
+      attr: src
+
+pages:  # settings for content pages, this setting is mandatory
+  - url-pattern: '.*'  # URL pattern for content page, only pages' URL matching this pattern will be processed
+    selector: html   # CSS selector for the content to be saved, this setting is mandatory
+    assets:  # assets to be downloaded, this setting is optional
+      - selector: img  # CSS selector for assets
+        attr: src  # attribute name for the asset URL
+      - selector: "link[rel=stylesheet]"
+        attr: href
+      - selector: "script[src]"
+        attr: src
+
+
+docset:  # config for generate docset, mandatory if run docset command
+  name: "Babashka book"  # docset name, this setting is mandatory
+  keyword: "bb"  # docset keyword, this setting is mandatory
+  icon: "bb.png"  # docset icon, this setting is mandatory
+  index: "/index.html"  # docset index page, this setting is mandatory
+  pages:  # docset pages config
+  - url-pattern: 'index.html'  # URL pattern for docset page, will match against local downloaded pages
+    extractor: |  # JavaScript code to extract the content for docset page, this setting is mandatory
+      (function() {
+        var links = [...document.querySelectorAll('#toc a.node-name--H2')];
+        var x = links.map(link => {
+          var name = link.innerText;
+          return {
+            path: link.href, 
+            name: name,
+            type: 'Guide' 
+          };
+        });
+        links = [...document.querySelectorAll('#toc a.node-name--H3')];
+        return x.concat(links.map(link => {
+          var name = link.innerText;
+          return {  
+            path: link.href,  
+            name: name, 
+            type: 'Section'
+          };
+        }));
+      })();
