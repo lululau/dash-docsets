@@ -1,0 +1,76 @@
+browser:
+  headless: false
+  window_size: [1920, 1200] # browser window size
+  timeout: 30
+
+concurrency: 16
+
+index-page:
+  url: https://python-poetry.org/docs
+  title: Poetry Documentation
+  modifier: |
+    document.querySelector('button[data-controller="mode-switch"]').click();
+  selector: "html"
+  output: "index.html"
+  link-selector: '#documentation-menu a:not([href^="#"])'
+  assets:
+    - selector: "link[rel=stylesheet]"
+      attr: href
+    - selector: "script[src]"
+      attr: src
+
+
+pages:
+  - url-pattern: '.*'
+    selector: html
+    modifier: |
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.innerHTML = `
+      document.addEventListener('DOMContentLoaded', function() {
+          document.querySelector('html').removeAttribute('class');
+          document.querySelector('html').setAttribute('class', 'light');
+      });
+      `
+      document.body.appendChild(script);
+    assets:
+      - selector: img
+        attr: src
+      - selector: "link[rel=stylesheet]"
+        attr: href
+      - selector: "script[src]"
+        attr: src
+            
+
+docset:
+  name: "Poetry Documetation"
+  keyword: "poe"
+  icon: "poe.png"
+  index: /index.html
+  pages:
+    - url-pattern: '/https_python-poetry.org_443/docs.html'
+      extractor: |
+        (function() {
+          var links = [...document.querySelectorAll('#documentation-menu a:not([href^="#"])')].map(link => {
+            var name = link.innerText;
+            return {
+              path: link.href,
+              name: name,
+              type: 'Guide',
+            };
+          });
+          return links;
+        })();
+    - url-pattern: '.*'
+      extractor: |
+        (function() {
+          var links = [...document.querySelectorAll('#TableOfContents a')].map(link => {
+            var name = link.innerText;
+            return {
+              path: link.href,
+              name: name,
+              type: 'Section'
+            };
+          });
+          return links;
+        })();
