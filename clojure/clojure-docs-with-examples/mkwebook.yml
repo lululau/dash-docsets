@@ -1,0 +1,74 @@
+browser:  # browser settings
+  headless: true  # headless mode
+  window_size: [1440, 1024] # browser window size
+  timeout: 30 # timeout for waiting for page loading
+  # Any options accepted by Ferum::Browser.new are allowed here
+
+concurrency: 128  # number of concurrent threads, default is no conccurency
+
+index-page:  # index page settings
+  url: https://clojuredocs.org/core-library  # URL of index page
+  title: Clojure Docs  # title for the book, use page's title if not set
+  selector: "html"  # CSS selector for the content to be saved
+  output: "index.html" # output file name
+  modifier: |
+    var x = document.querySelector('.desktop-nav-bar');
+    if (x) { x.remove(); }
+  link-selector: '.library-nav a'  # CSS selector for links of content pages
+
+max-recursion: 2  # max depth of recursive downloading
+
+pages:  # settings for content pages
+  - url-pattern: '.*'  # URL pattern for content page, only pages' URL matching this pattern will be processed
+    selector: html   # CSS selector for the content to be saved
+    page-link-selector: 'section dt > a'
+    modifier: |
+      var x = document.querySelector('.desktop-nav-bar');
+      if (x) { x.remove(); }
+    assets:  # assets to be downloaded
+      - selector: img  # CSS selector for assets
+        attr: src  # attribute name for the asset URL
+      - selector: "link[rel=stylesheet]"
+        attr: href
+      - selector: "script[src]"
+        attr: src
+
+docset:
+  name: "Clojure Documetation"
+  keyword: "clj"
+  icon: "clojure.png"
+  index: ./https_clojuredocs.org_443/clojure.core.html
+  pages:
+    - url-pattern: 'Documents/index.html'
+      extractor: |
+        (function() {
+          var links = [...document.querySelectorAll('.library-nav a')].map(link => {
+            var name = link.innerText;
+            var tag = link;
+            while (tag.tagName != 'BODY') {
+              tag = tag.parentElement;
+              if (tag.previousElementSibling && tag.previousElementSibling.tagName == 'H1') {
+                name = tag.previousElementSibling.innerText + ' - ' + name;
+              }
+            }
+            return {
+              path: link.href,
+              name: link.href.replace(/.*\/(.*)\.html/, '$1'),
+              type: 'Package'
+            };
+          });
+          return links;
+        })();
+    - url-pattern: '/clojure[^/]*.html'
+      extractor: |
+        (function() {
+          var links = [...document.querySelectorAll('section dt > a')].map(link => {
+            var name = link.innerText;
+            return {
+              path: link.href,
+              name: name,
+              type: 'Function'
+            };
+          });
+          return links;
+        })();
