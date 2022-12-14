@@ -1,0 +1,61 @@
+browser:  # browser settings, this setting is optional
+  headless: true  # headless mode, the -H CLI option could be used to override this setting
+  window_size: [1920, 1200] # browser window size
+  timeout: 30 # timeout for waiting for page loading
+  # Any options accepted by Ferum::Browser.new are allowed here
+
+concurrency: 16  # number of concurrent threads, default is no conccurency
+
+index-page:  # index page settings, this setting is mandatory
+  url: https://lancellc.gitbook.io/clash/
+  title: Clash Docs
+  selector: "html"  # CSS selector for the content to be saved, this setting is mandatory
+  output: "index.html" # output file name, this setting is mandatory
+  link-selector: "a[href^='/clash']"
+  assets:  # assets to be downloaded, this setting is optional
+    - selector: "link[rel=stylesheet]" # CSS selector for assets
+      attr: href  # attribute name for the asset URL
+    - selector: "script[src]"
+      attr: src
+
+max-recursion: 3  # max depth of recursive downloading, default is 1
+
+pages:  # settings for content pages, this setting is mandatory
+  - url-pattern: '.*'  # URL pattern for content page, only pages' URL matching this pattern will be processed
+    selector: html   # CSS selector for the content to be saved, this setting is mandatory
+    page-link-selector:  "a[href^='/clash']"
+    assets:  # assets to be downloaded, this setting is optional
+      - selector: img  # CSS selector for assets
+        attr: src  # attribute name for the asset URL
+      - selector: "link[rel=stylesheet]"
+        attr: href
+      - selector: "script[src]"
+        attr: src
+
+
+docset:  # config for generate docset, mandatory if run docset command
+  name: "Clash Docs"  # docset name, this setting is mandatory
+  keyword: "clash"  # docset keyword, this setting is mandatory
+  icon: "clash.png"  # docset icon, this setting is mandatory
+  index: "/index.html"  # docset index page, this setting is mandatory
+  pages:  # docset pages config
+  - url-pattern: '.*'  # URL pattern for docset page, will match against local downloaded pages
+    extractor: |  # JavaScript code to extract the content for docset page, this setting is mandatory
+      (function() {
+        var links = [...document.querySelectorAll("nav a:not([href*='#']):not([href^='http']):not([href='.'])")];
+        return links.map(link => {
+          var name = link.innerText;
+          return { 
+            path: link.href,
+            name: name, 
+            type: 'Guide' 
+          };
+        }).concat([...document.querySelectorAll("h2 span + a[href*='#']")].map(link => {
+          var name = link.innerText;
+          return { 
+            path: link.href,
+            name: link.previousElementSibling.innerText,
+            type: 'Section' 
+          };
+        }));
+      })();
