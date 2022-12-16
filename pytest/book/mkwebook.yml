@@ -1,0 +1,44 @@
+browser:  # browser settings, this setting is optional
+  headless: false  # headless mode, the -H CLI option could be used to override this setting
+  window_size: [1920, 1200] # browser window size
+  timeout: 30 # timeout for waiting for page loading
+  # Any options accepted by Ferum::Browser.new are allowed here
+
+concurrency: 32  # number of concurrent threads, default is no conccurency
+
+index-page:  # index page settings, this setting is mandatory
+  url: https://docs.pytest.org/en/7.2.x/contents.html
+  title: Pytest Documentation
+  modifier: |  # JavaScript code to modify the page, this setting is optional
+    document.body.innerHTML = document.querySelector('#full-pytest-documentation').outerHTML;
+    document.querySelector('#full-pytest-documentation').style.width = '100%';
+
+  selector: "html"  # CSS selector for the content to be saved, this setting is mandatory
+  output: "index.html" # output file name, this setting is mandatory
+  link-selector: "a.reference.internal"  # CSS selector for links of content pages, this setting is mandatory
+  assets:  # assets to be downloaded, this setting is optional
+    - selector: "link[rel=stylesheet]" # CSS selector for assets
+      attr: href  # attribute name for the asset URL
+    - selector: "script[src]"
+      attr: src
+
+max-recursion: 1  # max depth of recursive downloading, default is 1
+
+pages:  # settings for content pages, this setting is mandatory
+  - url-pattern: '.*'  # URL pattern for content page, only pages' URL matching this pattern will be processed
+    modifier: |  # JavaScript code to modify the page, this setting is optional
+      document.body.innerHTML = document.querySelector('.body').outerHTML;
+      document.querySelector('.body').style.width = '100%';
+      var f = document.querySelector('#rtd-sidebar');
+      if (f) f.remove();
+      var style = document.createElement('style');
+      style.innerHTML = '.highlight { background-color: white; }';
+      document.body.appendChild(style);
+    selector: html   # CSS selector for the content to be saved, this setting is mandatory
+    assets:  # assets to be downloaded, this setting is optional
+      - selector: img  # CSS selector for assets
+        attr: src  # attribute name for the asset URL
+      - selector: "link[rel=stylesheet]"
+        attr: href
+      - selector: "script[src]"
+        attr: src
