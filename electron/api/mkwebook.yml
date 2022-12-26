@@ -1,0 +1,135 @@
+browser:  # browser settings, this setting is optional
+  headless: true  # headless mode, the -H CLI option could be used to override this setting
+  window_size: [1920, 1200] # browser window size
+  timeout: 30 # timeout for waiting for page loading
+  # Any options accepted by Ferum::Browser.new are allowed here
+
+concurrency: 16  # number of concurrent threads, default is no conccurency
+
+index-page:  # index page settings, this setting is mandatory
+  url: https://www.electronjs.org/docs/latest/api/app  # URL of index page
+  title: Electron API  # title for the book, use page's title if not set
+  modifier: |  # JavaScript code to modify the page, this setting is optional
+    [...document.querySelectorAll('a.menu__link.menu__link--sublist.menu__link--sublist-caret[aria-expanded="false"]')].forEach(e => e.click());
+
+  selector: "html"  # CSS selector for the content to be saved, this setting is mandatory
+  output: "index.html" # output file name, this setting is mandatory
+  link-selector: "nav.menu a.menu__link"  # CSS selector for links of content pages, this setting is mandatory
+  assets:  # assets to be downloaded, this setting is optional
+    - selector: "link[rel=stylesheet]" # CSS selector for assets
+      attr: href  # attribute name for the asset URL
+    - selector: "script[src]"
+      attr: src
+
+max-recursion: 1  # max depth of recursive downloading, default is 1
+
+pages:  # settings for content pages, this setting is mandatory
+  - url-pattern: '.*'  # URL pattern for content page, only pages' URL matching this pattern will be processed
+    modifier: |  # JavaScript code to modify the page, this setting is optional
+      document.querySelector('html').setAttribute('data-theme', 'light');
+      document.body.innerHTML = document.querySelector('.theme-doc-markdown.markdown').outerHTML;
+
+    selector: html   # CSS selector for the content to be saved, this setting is mandatory
+    assets:  # assets to be downloaded, this setting is optional
+      - selector: img  # CSS selector for assets
+        attr: src  # attribute name for the asset URL
+      - selector: "link[rel=stylesheet]"
+        attr: href
+      - selector: "link[rel=prefetch]"
+        attr: href
+      - selector: "link[rel=preload]"
+        attr: href
+      - selector: "script[src]"
+        attr: src
+
+docset:  # config for generate docset, mandatory if run docset command
+  name: "Electron API"  # docset name, this setting is mandatory
+  keyword: "electron"  # docset keyword, this setting is mandatory
+  icon: "electron.png"  # docset icon, this setting is mandatory
+  index: "https_www.electronjs.org_443/docs/latest/api/app.html"  # docset index page, this setting is mandatory
+  pages:  # docset pages config
+  - url-pattern: 'index.html'  # URL pattern for docset page, will match against local downloaded pages
+    extractor: |  # JavaScript code to extract the content for docset page, this setting is mandatory
+      (function() {
+        var result = [];
+        var links = [...document.querySelectorAll('#docusaurus_skipToContent_fallback > div > aside > div > nav > ul > li:nth-child(1) a')];
+        result = result.concat(links.map(link => {
+          return {  // Should return an array of objects with name, path, type attributes
+            path: link.href,  // path of the page, should be relative to DEMO.docset/Contents/Resources/Documents (starts with /)
+            name: link.innerText, // name of extracted element
+            type: 'Module' // type of extracted element
+          };
+        }));
+
+        links = [...document.querySelectorAll('#docusaurus_skipToContent_fallback > div > aside > div > nav > ul > li:nth-child(2) a')];
+        result = result.concat(links.map(link => {
+          return {  // Should return an array of objects with name, path, type attributes
+            path: link.href,  // path of the page, should be relative to DEMO.docset/Contents/Resources/Documents (starts with /)
+            name: link.innerText, // name of extracted element
+            type: 'Module' // type of extracted element
+          };
+        }));
+
+        links = [...document.querySelectorAll('#docusaurus_skipToContent_fallback > div > aside > div > nav > ul > li:nth-child(3) a')];
+        result = result.concat(links.map(link => {
+          return {  // Should return an array of objects with name, path, type attributes
+            path: link.href,  // path of the page, should be relative to DEMO.docset/Contents/Resources/Documents (starts with /)
+            name: link.innerText, // name of extracted element
+            type: 'Element' // type of extracted element
+          };
+        }));
+
+        links = [...document.querySelectorAll('#docusaurus_skipToContent_fallback > div > aside > div > nav > ul > li:nth-child(4) a')];
+        result = result.concat(links.map(link => {
+          return {  // Should return an array of objects with name, path, type attributes
+            path: link.href,  // path of the page, should be relative to DEMO.docset/Contents/Resources/Documents (starts with /)
+            name: link.innerText, // name of extracted element
+            type: 'Environment' // type of extracted element
+          };
+        }));
+
+        links = [...document.querySelectorAll('#docusaurus_skipToContent_fallback > div > aside > div > nav > ul > li:nth-child(5) a')];
+        result = result.concat(links.map(link => {
+          return {  // Should return an array of objects with name, path, type attributes
+            path: link.href,  // path of the page, should be relative to DEMO.docset/Contents/Resources/Documents (starts with /)
+            name: link.innerText, // name of extracted element
+            type: 'Class' // type of extracted element
+          };
+        }));
+
+        links = [...document.querySelectorAll('#docusaurus_skipToContent_fallback > div > aside > div > nav > ul > li:nth-child(6) a')];
+        result = result.concat(links.map(link => {
+          return {  // Should return an array of objects with name, path, type attributes
+            path: link.href,  // path of the page, should be relative to DEMO.docset/Contents/Resources/Documents (starts with /)
+            name: link.innerText, // name of extracted element
+            type: 'Object' // type of extracted element
+          };
+        }));
+
+        return result;
+      })();
+  - url-pattern: '.*.html'  # URL pattern for docset page, will match against local downloaded pages
+    extractor: |  # JavaScript code to extract the content for docset page, this setting is mandatory
+      (function() {
+        var result = [];
+        var links = [...document.querySelectorAll('h3.anchor')];
+        result = result.concat(links.map(link => {
+          var text = link.innerText;
+          if (text.startsWith('Event:')) {
+            text = text.replaceAll(/Event:\s*'(.*)'/g, '$1');
+            return {  // Should return an array of objects with name, path, type attributes
+              path: link.querySelector('a').href,
+              name: text,
+              type: 'Event' // type of extracted element
+            };
+          } else {
+            return {  // Should return an array of objects with name, path, type attributes
+              path: link.querySelector('a').href,
+              name: text, // name of extracted element
+              type: 'Method' // type of extracted element
+            };
+          }
+        }));
+
+        return result;
+      })();
