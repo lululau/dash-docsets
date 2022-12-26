@@ -1,0 +1,49 @@
+browser:  # browser settings, this setting is optional
+  headless: true  # headless mode, the -H CLI option could be used to override this setting
+  window_size: [1920, 1200] # browser window size
+  timeout: 30 # timeout for waiting for page loading
+  # Any options accepted by Ferum::Browser.new are allowed here
+
+concurrency: 16  # number of concurrent threads, default is no conccurency
+
+index-page:  # index page settings, this setting is mandatory
+  url: https://yunlzheng.gitbook.io/prometheus-book/  # URL of index page
+  title: Prometheus Book  # title for the book, use page's title if not set
+  modifier: |  # JavaScript code to modify the page, this setting is optional
+    document.body.innerHTML = document.querySelector('[data-testid="page.contentEditor"]').outerHTML;
+    var style = document.createElement('style');
+    style.innerHTML = '[data-rnw-int-class="nearest_354-3995_362-3996-252__"] { color: black !important; }';
+    document.head.appendChild(style);
+
+  selector: "html"  # CSS selector for the content to be saved, this setting is mandatory
+  output: "index.html" # output file name, this setting is mandatory
+  link-selector: 'a:not([href^="#"])'  # CSS selector for links to be followed, this setting is optional
+  assets:  # assets to be downloaded, this setting is optional
+    - selector: "link[rel=stylesheet]" # CSS selector for assets
+      attr: href  # attribute name for the asset URL
+    - selector: "script[src]"
+      attr: src
+
+max-recursion: 1  # max depth of recursive downloading, default is 1
+
+pages:  # settings for content pages, this setting is mandatory
+  - url-pattern: '.*'  # URL pattern for content page, only pages' URL matching this pattern will be processed
+    modifier: |  # JavaScript code to modify the page, this setting is optional
+      document.body.innerHTML = document.querySelector('main').outerHTML;
+      var e = document.querySelector('main > div:last-child > div:last-child');
+      if (e) e.remove();
+      for (var image of document.querySelectorAll('div[style*="background-image"]')) {
+        image.remove();
+      }
+      for (var image of document.querySelectorAll('img')) {
+        image.setAttribute('class', '');
+      }
+
+    selector: html   # CSS selector for the content to be saved, this setting is mandatory
+    assets:  # assets to be downloaded, this setting is optional
+      - selector: img  # CSS selector for assets
+        attr: src  # attribute name for the asset URL
+      - selector: "link[rel=stylesheet]"
+        attr: href
+      - selector: "script[src]"
+        attr: src
